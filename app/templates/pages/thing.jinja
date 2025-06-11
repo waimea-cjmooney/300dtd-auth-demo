@@ -27,9 +27,12 @@
 
         <p>Owner: <strong>{{ thing.u_name }}</strong></p>
 
-        <footer>
-            <a href="/delete/{{ thing.t_id }}" onclick="return confirm('Really delete?');">Delete</a>
-        </footer>
+        {# If logged into the account that owns the thing, show the delete link #}
+        {% if thing.u_id == session.user_id %}
+            <footer>
+                <a href="/delete/{{ thing.t_id }}" onclick="return confirm('Really delete?');">Delete</a>
+            </footer>
+        {% endif %}
 
     </article>
 

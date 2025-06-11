@@ -78,7 +78,7 @@ def show_one_thing(id):
         sql = """SELECT things.id   AS t_id, 
                         things.name AS t_name,
                         users.name  AS u_name,
-                        users.id     AS u_id
+                        users.id    AS u_id
 
                  FROM things
                  JOIN users ON things.user_id = users.id
@@ -105,16 +105,17 @@ def show_one_thing(id):
 def add_a_thing():
     # Get the data from the form
     name  = request.form.get("name")
-    price = request.form.get("price")
 
     # Sanitise the inputs
     name = html.escape(name)
-    price = html.escape(price)
+
+    # Get the user ID from the session
+    user_id = session.get("user_id")
 
     with connect_db() as client:
         # Add the thing to the DB
-        sql = "INSERT INTO things (name, price) VALUES (?, ?)"
-        values = [name, price]
+        sql = "INSERT INTO things (name, user_id) VALUES (?, ?)"
+        values = [name, user_id]
         client.execute(sql, values)
 
         # Go back to the home page
@@ -197,13 +198,28 @@ def login_user():
 @app.get("/delete/<int:id>")
 def delete_a_thing(id):
     with connect_db() as client:
-        # Delete the thing from the DB
-        sql = "DELETE FROM things WHERE id=?"
-        values = [id]
+        # get our user ID from the session
+        user_id = session.get("user_id")
+
+        # Delete the thing from the DB checking the user ID matches
+        sql = "DELETE FROM things WHERE id=? AND user_id=?"
+        values = [id, user_id]
         client.execute(sql, values)
 
         # Go back to the home page
-        flash("Thing deleted", "warning")
+        flash("Thing deleted", "success")
         return redirect("/things")
 
 
+#-----------------------------------------------------------
+# Route user logout, clearing the session
+#-----------------------------------------------------------
+@app.get("/logout")
+def logout_user():
+    # Clear the session data
+    session.pop("user_id", None)
+    session.pop("user_name", None)
+
+    # Go back to the home page
+    flash("Logged out", "sucscess")
+    return redirect("/")
